@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 app = Dash(__name__)
-
+server=app.server
 
 # The concentration distribution in a column is completely described by the Ogata-Banks equation
 # V - velocity
