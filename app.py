@@ -19,7 +19,7 @@ server=app.server
 def ogata_banks_c_vs_d(V=0.1, D=0.1, C=1, time=300):
     Vt = V * time
     Dt = D * time
-    distance = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    distance = [1] + list(range(5,105,5))
     denomanator = math.sqrt(Dt) * 2
     first_term = [(math.exp(V * d / D)) * math.erfc((d + Vt) / denomanator) for d in distance]
 
@@ -36,7 +36,7 @@ def ogata_banks_c_vs_d(V=0.1, D=0.1, C=1, time=300):
 # C - initial concentration
 # dist - distance
 def ogata_banks_c_vs_t(V=0.1, D=10, C=1, dist=10):
-    time = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    time = [1] + list(range(5,105,5))
     Vt = [V * t for t in time]
     Dt = [D * t for t in time]
 
@@ -70,16 +70,16 @@ colorscale = [[0, 'rgb' + str(cmap(1)[0:3])],
 
 # 3 contours, can be changeable
 fig2 = go.Figure(data=[
-    go.Surface(x=ogata_banks_c_vs_d(C=1)[1], y=list(range(1, 11)), z=11 * [ogata_banks_c_vs_d(C=1)[0]],
-               surfacecolor=np.full(shape=np.array(11 * [ogata_banks_c_vs_d(C=1)[0]]).shape, fill_value=1),
+    go.Surface(x=ogata_banks_c_vs_d(C=1)[1], y=list(range(1, 17)), z=17 * [ogata_banks_c_vs_d(C=1)[0]],
+               surfacecolor=np.full(shape=np.array(17 * [ogata_banks_c_vs_d(C=1)[0]]).shape, fill_value=1),
                colorscale=colorscale, cmin=1,
                cmax=3, ),
-    go.Surface(x=ogata_banks_c_vs_d(C=2)[1], y=list(range(1, 11)), z=11 * [ogata_banks_c_vs_d(C=2)[0]],
-               surfacecolor=np.full(shape=np.array(11 * [ogata_banks_c_vs_d(C=2)[0]]).shape, fill_value=2),
+    go.Surface(x=ogata_banks_c_vs_d(C=2)[1], y=list(range(1, 17)), z=17 * [ogata_banks_c_vs_d(C=2)[0]],
+               surfacecolor=np.full(shape=np.array(17 * [ogata_banks_c_vs_d(C=2)[0]]).shape, fill_value=2),
                colorscale=colorscale, cmin=1,
                cmax=3, ),
-    go.Surface(x=ogata_banks_c_vs_d(C=3)[1], y=list(range(1, 11)), z=11 * [ogata_banks_c_vs_d(C=3)[0]],
-               surfacecolor=np.full(shape=np.array(11 * [ogata_banks_c_vs_d(C=3)[0]]).shape, fill_value=3),
+    go.Surface(x=ogata_banks_c_vs_d(C=3)[1], y=list(range(1, 17)), z=17 * [ogata_banks_c_vs_d(C=3)[0]],
+               surfacecolor=np.full(shape=np.array(17 * [ogata_banks_c_vs_d(C=3)[0]]).shape, fill_value=3),
                colorscale=colorscale, cmin=1,
                cmax=3, ),
 ], )
@@ -97,7 +97,7 @@ fig3 = px.line(df3, x="time", y="concentration")
 time = []
 distance = []
 concentration = []
-for t in range(10,400,10):
+for t in range(10,400,5):
     func_call = ogata_banks_c_vs_d(time=t)
     distance.extend(func_call[1])
     concentration.extend(func_call[0])
@@ -169,7 +169,17 @@ app.layout = html.Div(children=[
         id='1d-graph-dist-time',
         figure=fig4  # concentraiton vs distance animated across time
     ),
-])
+],
+    style={
+        "width": "65%",
+        "display": "inline-block",
+        "padding": "0 20",
+        "vertical-align": "middle",
+        "margin-bottom": 30,
+        "margin-right": 50,
+        "margin-left": 20,
+    },
+)
 
 
 @app.callback(
@@ -201,4 +211,4 @@ def update_output(d, c):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(host='0.0.0.0', port=8050, debug=True)

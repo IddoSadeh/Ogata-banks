@@ -1,6 +1,5 @@
-dash==2.6.0
+dash
 matplotlib==3.5.2
 numpy
-pandas
+pandas==1.4.3
 plotly==5.9.0
-gunicorn
