@@ -1,5 +1,0 @@
-dash
-matplotlib==3.5.2
-numpy
-pandas==1.4.3
-plotly==5.9.0
