@@ -10,7 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 app = Dash(__name__)
-server=app.server
+server = app.server
+
 
 # The concentration distribution in a column is completely described by the Ogata-Banks equation
 # V - velocity
@@ -19,7 +20,7 @@ server=app.server
 def ogata_banks_c_vs_d(V=0.1, D=0.1, C=1, time=300):
     Vt = V * time
     Dt = D * time
-    distance = [1] + list(range(5,105,5))
+    distance = [1] + list(range(5, 105, 5))
     denomanator = math.sqrt(Dt) * 2
     first_term = [(math.exp(V * d / D)) * math.erfc((d + Vt) / denomanator) for d in distance]
 
@@ -36,17 +37,15 @@ def ogata_banks_c_vs_d(V=0.1, D=0.1, C=1, time=300):
 # C - initial concentration
 # dist - distance
 def ogata_banks_c_vs_t(V=0.1, D=10, C=1, dist=10):
-    time = [1] + list(range(5,105,5))
+    time = [1] + list(range(5, 105, 5))
     Vt = [V * t for t in time]
     Dt = [D * t for t in time]
 
     denominator = [math.sqrt(dt) * 2 for dt in Dt]
-    first_term = [(math.exp(V * dist / D)) * math.erfc((dist + vt)) for vt in Vt]
-    first_term = [f / den for f, den in zip(first_term, denominator)]
+    first_term = [(math.exp(V * dist / D)) * math.erfc((dist + vt) / den) for vt, den in zip(Vt, denominator)]
 
-    second_term = [1 + math.erf(-(dist - vt)) if (dist - vt) <= 0 else math.erfc(dist - vt) for vt in
-                   Vt]
-    second_term = [s / den for s, den in zip(second_term, denominator)]
+    second_term = [1 + math.erf(-(dist - vt) / den) if (dist - vt) <= 0 else math.erfc((dist - vt) / den) for vt, den in
+                   zip(Vt, denominator)]
 
     concentration = [(C / 2) * (f + s) for f, s in zip(first_term, second_term)]
 
@@ -97,18 +96,18 @@ fig3 = px.line(df3, x="time", y="concentration")
 time = []
 distance = []
 concentration = []
-for t in range(10,400,5):
+for t in range(10, 400, 5):
     func_call = ogata_banks_c_vs_d(time=t)
     distance.extend(func_call[1])
     concentration.extend(func_call[0])
-    time.extend(([t]*len(func_call[0])))
+    time.extend(([t] * len(func_call[0])))
 df4 = pd.DataFrame(dict(
     time=time,
     distance=distance,
     concentration=concentration
 ))
 
-fig4 = px.line(df4, x="distance", y="concentration", animation_frame="time",range_y=[0,max(concentration)])
+fig4 = px.line(df4, x="distance", y="concentration", animation_frame="time", range_y=[0, max(concentration)])
 # app layout
 app.layout = html.Div(children=[
     html.H1(children='Modeling the Transport of Dissolved contaminants'),
