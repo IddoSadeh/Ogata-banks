@@ -108,6 +108,26 @@ df4 = pd.DataFrame(dict(
 ))
 
 fig4 = px.line(df4, x="distance", y="concentration", animation_frame="time", range_y=[0, max(concentration)])
+
+# concentration vs depth as shaded column graph
+
+fig5 = go.Figure(data=
+go.Contour(
+    z=[[i, i] for i in ogata_banks_c_vs_d()[0]],
+    y=ogata_banks_c_vs_d()[1],
+    x=[1]
+    , colorbar=dict(
+        title='Concentration',  # title here
+        titleside='right',
+        titlefont=dict(
+            size=14,
+            family='Arial, sans-serif')
+    )
+))
+fig5.update_yaxes(autorange='reversed', title="distance from surface")
+fig5.update_xaxes(visible=False, showticklabels=False)
+fig5.update_traces(hovertemplate='Distance: %{y}' + '<br>Concentration: %{z:.2f}')
+
 # app layout
 app.layout = html.Div(children=[
     html.H1(children='Modeling the Transport of Dissolved contaminants'),
@@ -168,6 +188,25 @@ app.layout = html.Div(children=[
         id='1d-graph-dist-time',
         figure=fig4  # concentraiton vs distance animated across time
     ),
+    html.H2(children='''
+    concentraiton vs depth as a shaded column: 
+'''),
+
+    dcc.Graph(
+        id='1d-contour-dist-conc',
+        figure=fig5  # concentraiton vs depth as a shaded column
+    ),
+    html.H4(children="Adjust time"),
+    dcc.Slider(1, 1000, 40,
+               value=300,
+               id='time-slider5'
+               ),
+    html.Div(id='time-output-container5'),
+    html.H4(children="Adjust intial concentration"),
+    dcc.Slider(1, 10, 1,
+               value=1,
+               id='conc-slider5'
+               ),
 ],
     style={
         "width": "65%",
@@ -207,6 +246,31 @@ def update_output(d, c):
     ))
     fig = px.line(df, x="time", y="concentration")
     return fig
+
+
+@app.callback(
+    Output('1d-contour-dist-conc', 'figure'),
+    Input('time-slider5', 'value'),
+    Input('conc-slider5', 'value'))
+def update_output(t, c):
+    fig5 = go.Figure(data=
+    go.Contour(
+        z=[[i, i] for i in ogata_banks_c_vs_d(C=c, time=t)[0]],
+        y=ogata_banks_c_vs_d(C=c, time=t)[1],
+        x=[1]
+        , colorbar=dict(
+            title='Concentration',  # title here
+            titleside='right',
+            titlefont=dict(
+                size=14,
+                family='Arial, sans-serif')
+        ),
+        colorscale=[[0, "white"], [0.5 , "red"], [1, "black"]]
+    ))
+    fig5.update_yaxes(autorange='reversed', title="distance from surface")
+    fig5.update_xaxes(visible=False, showticklabels=False)
+    fig5.update_traces(hovertemplate='Distance: %{y}' + '<br>Concentration: %{z:.2f}')
+    return fig5
 
 
 if __name__ == '__main__':
