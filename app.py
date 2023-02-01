@@ -38,7 +38,7 @@ def ogata_banks_c_vs_d(V=0.1, D=0.1, C=1, time=300):
 # D - Coefficient of hydrodynamic dispersion
 # C - initial concentration
 # dist - distance
-def ogata_banks_c_vs_t(V=0.1, D=10, C=1, dist=10):
+def ogata_banks_c_vs_t(V=0.1, D=0.1, C=1, dist=5):
     time = [1] + list(range(5, 105, 1))
     Vt = [V * t for t in time]
     Dt = [D * t for t in time]
@@ -94,18 +94,30 @@ app.layout = html.Div(children=[
 
 # Fig 1, concentration vs depth; adjustable time
     html.H2(children='Concentration vs depth down the column at a selectable time.'),
-    dcc.Graph(
-        id='1d-graph-dist',
-        figure=fig1  # concentraiton vs distance
+
+    html.Div([
+        html.H4(children="Set value for D (0.02 to 1.0)"),
+        dcc.Input(
+            id="D-value",
+            type="number",
+            value=0.1,
+            placeholder="Set value for D",
+            min=0.02, max=1.0, step=0.02
+            ),
+        ], style={"width": "25%", "display": "inline-block", "vertical-align": "middle", },
     ),
 
-    html.H4(children="Set value for D (0.0 to 1.0)"),
-    dcc.Input(
-        id="D-value",
-        type="number",
-        placeholder="Set value for D",
-        min=0.0, max=1.0, step=0.02
+    html.Div([
+        html.H4(children="Set value for V (0.02 to 1.0)"),
+        dcc.Input(
+            id="V-value",
+            type="number",
+            value=0.1,
+            placeholder="Set value for V",
+            min=0.02, max=.5, step=0.02
         ),
+    ], style={"width": "25%", "display": "inline-block", "vertical-align": "middle", },
+    ),
 
     html.H4(children="Adjust the time"),
     dcc.Slider(1, 1000, 40,
@@ -113,17 +125,26 @@ app.layout = html.Div(children=[
         id='time-slider1'
         ),
 
+    dcc.Graph(
+        id='1d-graph-dist',
+        figure=fig1  # concentraiton vs distance
+    ),
+    html.Hr(),
+
 # Fig 2, Concentration vs time at an adjustable distance.
-    html.H2(children='Concentration vs time at a selectable distance.'),
+    html.H2(children='Concentration vs time at a selectable distance. V=0.1, D=0.1'),
+    html.H4(children="Adjust distance along the column for this time-plot"),
+    dcc.Slider(0, 15, 1,
+        value=6,
+        id='dist-slider2'
+        ),
+
     dcc.Graph(
         id='1d-graph-time',
         figure=fig3  # concentraiton vs time at given distance
     ),
-    html.H4(children="Adjust distance along the column for this time-plot"),
-    dcc.Slider(0, 30, 3,
-        value=10,
-        id='dist-slider2'
-        ),
+
+    html.Hr(),
 
 # Fig 3, Animated concentration vs time at an adjustable distance.
     html.H2(children='Animated concentration vs time at an adjustable distance.'),
@@ -147,12 +168,11 @@ app.layout = html.Div(children=[
 
 @app.callback(
     Output('1d-graph-dist', 'figure'),
+    Input('V-value', 'value'),
     Input('D-value', 'value'),
     Input('time-slider1', 'value'))
-def update_output(d, t):
-# initialization throws a "unsupported operand type(s)" error on D-value value. No idea why.
-# subsequent use seems OK, unless "0" is allowed.
-    ob = ogata_banks_c_vs_d(D=d, C=1, time=t)
+def update_output(v, d, t):
+    ob = ogata_banks_c_vs_d(V=v, D=d, C=1, time=t)
     df = pd.DataFrame(dict(
         distance=ob[1],
         concentration=ob[0]
