@@ -26,11 +26,12 @@ def ogata_banks_c_vs_d(V=0.1, D=0.1, C=1, time=300):
                   math.erfc((d + Vt) / denomanator) for d in distance]
 
     second_term = [1 + math.erf(-(d - Vt) / denomanator) if (d - Vt) <= 0
-            else math.erfc(d - Vt) / denomanator for d in distance]
-    concentration = [(C / 2) * (f + s)
+                   else math.erfc((d - Vt) / denomanator) for d in distance]
+    first_term = [(C/2)*f for f in first_term]
+    second_term = [(C / 2) * s for s in second_term]
+    concentration = [(f + s)
                      for f, s in zip(first_term, second_term)]
-
-    return concentration, distance
+    return concentration, distance, first_term, second_term
 
 
 # The concentration distribution at distance in a column over time is completely described by the Ogata-Banks equation
@@ -48,7 +49,7 @@ def ogata_banks_c_vs_t(V=0.1, D=0.1, C=1, dist=5):
                   for vt, den in zip(Vt, denominator)]
 
     second_term = [1 + math.erf(-(dist - vt) / den) if (dist - vt) <= 0
-            else math.erfc((dist - vt) / den) for vt, den in zip(Vt, denominator)]
+                   else math.erfc((dist - vt) / den) for vt, den in zip(Vt, denominator)]
 
     concentration = [(C / 2) * (f + s)
                      for f, s in zip(first_term, second_term)]
@@ -92,7 +93,7 @@ fig4 = px.line(df4, x="distance", y="concentration", animation_frame="time", ran
 app.layout = html.Div(children=[
     html.H1(children='Modeling the Transport of Dissolved contaminants'),
 
-# Fig 1, concentration vs depth; adjustable time
+    # Fig 1, concentration vs depth; adjustable time
     html.H2(children='Concentration vs depth down the column at a selectable time.'),
 
     html.Div([
@@ -103,8 +104,8 @@ app.layout = html.Div(children=[
             value=0.1,
             placeholder="Set value for D",
             min=0.02, max=1.0, step=0.02
-            ),
-        ], style={"width": "25%", "display": "inline-block", "vertical-align": "middle", },
+        ),
+    ], style={"width": "25%", "display": "inline-block", "vertical-align": "middle", },
     ),
 
     html.Div([
@@ -118,12 +119,16 @@ app.layout = html.Div(children=[
         ),
     ], style={"width": "25%", "display": "inline-block", "vertical-align": "middle", },
     ),
-
+    html.Div([
+        html.H4(children="Plot components"),
+        dcc.Checklist(options=['Term 1', 'Term 2'], id='component_check')
+    ], style={"width": "25%", "display": "inline-block", "vertical-align": "middle", },
+    ),
     html.H4(children="Adjust the time"),
     dcc.Slider(1, 1000, 40,
-        value=300,
-        id='time-slider1'
-        ),
+               value=300,
+               id='time-slider1'
+               ),
 
     dcc.Graph(
         id='1d-graph-dist',
@@ -131,13 +136,13 @@ app.layout = html.Div(children=[
     ),
     html.Hr(),
 
-# Fig 2, Concentration vs time at an adjustable distance.
+    # Fig 2, Concentration vs time at an adjustable distance.
     html.H2(children='Concentration vs time at a selectable distance. V=0.1, D=0.1'),
     html.H4(children="Adjust distance along the column for this time-plot"),
     dcc.Slider(0, 15, 1,
-        value=6,
-        id='dist-slider2'
-        ),
+               value=6,
+               id='dist-slider2'
+               ),
 
     dcc.Graph(
         id='1d-graph-time',
@@ -146,7 +151,7 @@ app.layout = html.Div(children=[
 
     html.Hr(),
 
-# Fig 3, Animated concentration vs time at an adjustable distance.
+    # Fig 3, Animated concentration vs time at an adjustable distance.
     html.H2(children='Animated concentration vs time at an adjustable distance.'),
 
     dcc.Graph(
@@ -164,20 +169,28 @@ app.layout = html.Div(children=[
         "margin-left": 20,
     },
 )
+
+
 # ------------------------------------------------------------------------
 
 @app.callback(
     Output('1d-graph-dist', 'figure'),
     Input('V-value', 'value'),
     Input('D-value', 'value'),
-    Input('time-slider1', 'value'))
-def update_output(v, d, t):
+    Input('time-slider1', 'value'),
+    Input('component_check', 'value'))
+def update_output(v, d, t, component):
     ob = ogata_banks_c_vs_d(V=v, D=d, C=1, time=t)
     df = pd.DataFrame(dict(
         distance=ob[1],
         concentration=ob[0]
     ))
     fig = px.line(df, x="distance", y="concentration")
+    if component:
+        if 'Term 1' in component:
+            fig.add_scatter(x=ob[1], y=ob[2], name='Term 1')
+        if 'Term 2' in component:
+            fig.add_scatter(x=ob[1], y=ob[3], name='Term 2')
     return fig
 
 
@@ -190,7 +203,7 @@ def update_output(d):
         time=ob[1],
         concentration=ob[0]
     ))
-    fig = px.line(df, x="time", y="concentration", range_y=[0,1])
+    fig = px.line(df, x="time", y="concentration", range_y=[0, 1])
     return fig
 
 
